@@ -2,56 +2,60 @@ pipeline {
     agent any
 
     stages {
-        stage('Delete Old Frontend Deployment') {
+
+        stage('Build Frontend') {
+            steps {
+                dir('STUDENTAPI-REACT') {
+                    bat 'npm install'
+                    bat 'npm run build'
+                }
+            }
+        }
+
+        stage('Deploy Frontend to Tomcat') {
             steps {
                 bat '''
                 if exist "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\reactstudentapi" (
                     rmdir /S /Q "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\reactstudentapi"
                 ) else (
-                    echo "No old frontend deployment found, skipping delete."
+                    echo "No old frontend deployment found."
                 )
-                '''
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                bat 'echo Building frontend...'
-                // Add your actual frontend build commands here
-            }
-        }
-
-        stage('Deploy Frontend') {
-            steps {
-                bat 'echo Deploying frontend...'
-                // Add your actual deployment steps here
-            }
-        }
-
-        stage('Delete Old Backend Deployment') {
-            steps {
-                bat '''
-                if exist "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\backendapi" (
-                    rmdir /S /Q "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\backendapi"
-                ) else (
-                    echo "No old backend deployment found, skipping delete."
-                )
+                mkdir "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\reactstudentapi"
+                xcopy /E /I /Y "STUDENTAPI-REACT\\dist\\*" "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\reactstudentapi"
                 '''
             }
         }
 
         stage('Build Backend') {
             steps {
-                bat 'echo Building backend...'
-                // Add your backend build commands here
+                dir('STUDENTAPI-SPRINGBOOT') {
+                    bat 'mvn clean package'
+                }
             }
         }
 
-        stage('Deploy Backend') {
+        stage('Deploy Backend to Tomcat') {
             steps {
-                bat 'echo Deploying backend...'
-                // Add your backend deployment steps here
+                bat '''
+                if exist "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi.war" (
+                    del /Q "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi.war"
+                )
+                if exist "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi" (
+                    rmdir /S /Q "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi"
+                )
+                cd target
+                copy *.war "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\"
+                '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful!'
+        }
+        failure {
+            echo 'Pipeline Failed.'
         }
     }
 }
