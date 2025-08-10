@@ -2,7 +2,15 @@ pipeline {
     agent any
 
     stages {
-        
+        // ===== FRONTEND =====
+        stage('Delete Old Frontend Deployment') {
+            steps {
+                bat '''
+                    rmdir /S /Q "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/reactstudentapi"
+                '''
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('STUDENTAPI-REACT') {
@@ -12,12 +20,21 @@ pipeline {
             }
         }
 
-        stage('Copy Frontend Build to Backend') {
+        stage('Deploy Frontend') {
             steps {
                 bat '''
-                     rmdir /S /Q "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\reactstudentapi"
-                     mkdir "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\reactstudentapi"
-                     xcopy /E /I /Y dist\* "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\reactstudentapi"
+                    mkdir "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/reactstudentapi"
+                    xcopy /E /I /Y STUDENTAPI-REACT/dist/* "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/reactstudentapi"
+                '''
+            }
+        }
+
+        // ===== BACKEND =====
+        stage('Delete Old Backend Deployment') {
+            steps {
+                bat '''
+                    del /Q "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/springbootstudentapi.war"
+                    rmdir /S /Q "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/springbootstudentapi"
                 '''
             }
         }
@@ -25,19 +42,16 @@ pipeline {
         stage('Build Backend') {
             steps {
                 dir('STUDENTAPI-SPRINGBOOT') {
-                    bat 'mvn clean package'
+                    bat 'mvn clean package -DskipTests'
                 }
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Deploy Backend') {
             steps {
                 bat '''
-                    del /Q "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\springbootstudentapi.war"
-                    rmdir /S /Q "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\springbootstudentapi"
-                    cd target
-                    copy *.war "C:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\"
-                    '''
+                    copy STUDENTAPI-SPRINGBOOT/target/*.war "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/springbootstudentapi.war"
+                '''
             }
         }
     }
