@@ -43,8 +43,7 @@ pipeline {
                 if exist "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi" (
                     rmdir /S /Q "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\springbootstudentapi"
                 )
-                cd target
-                copy *.war "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\"
+                copy STUDENTAPI-SPRINGBOOT/target/*.war "C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps/springbootstudentapi.war"
                 '''
             }
         }
