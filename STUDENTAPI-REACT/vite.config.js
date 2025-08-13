@@ -6,3 +6,4 @@ export default defineConfig({
   plugins: [react()],
   base: '/reactstudentapi/',
 })
+//5173,2001
